@@ -32,24 +32,32 @@ local function requesturl(url, bypass)
     if betterisfile(url) and shared.FutureDeveloper then 
         return readfile(url)
     end
-    local repourl = bypass and "https://raw.githubusercontent.com/nalityemailperson-create/" or "https://raw.githubusercontent.com/nalityemailperson-create/Future/main/"
-    local url = url:gsub("Future/", "")
-    local req = requestfunc({
-        Url = repourl..url,
-        Method = "GET"
-    })
-    if req.StatusCode ~= 200 then return req.StatusCode end
-    return req.Body
-end 
 
+    local cleanurl = tostring(url):gsub("^%./+", ""):gsub("^/+", ""):gsub("Future/", "")
+    local repourls = {
+        (bypass and "https://raw.githubusercontent.com/nalityemailperson-create/" or "https://raw.githubusercontent.com/nalityemailperson-create/Future/main/"),
+        (bypass and "https://raw.githubusercontent.com/EngoAlt/" or "https://raw.githubusercontent.com/EngoAlt/Future/main/")
+    }
 
---shared.Future.entity = loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/Libraries/entityHandler.lua"))()
+    for _, repourl in ipairs(repourls) do
+        local ok, req = pcall(function()
+            return requestfunc({
+                Url = repourl .. cleanurl,
+                Method = "GET"
+            })
+        end)
+
+        if ok and req and req.StatusCode == 200 then
+            return req.Body
+        end
+    end
+
+    warn("[Future] Failed to fetch " .. tostring(url) .. " from configured GitHub mirrors.")
+    return nil
+end
+
 
 -- anti mobile skids:
-
-(function() 
-    local entity = loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/Libraries/entityHandler.lua"))()
-end)()
 
 
 -- AntiPreloadAsync:

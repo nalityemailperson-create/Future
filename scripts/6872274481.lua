@@ -30,24 +30,34 @@ local isnetworkowner = isnetworkowner or function(part)
     return gethiddenproperty(part, "NetworkOwnershipRule") == Enum.NetworkOwnership.Automatic
 end
 local printtable = printtable or print
-local whitelisted = {}
 local storedshahashes = {}
-pcall(function()
-	whitelisted = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/whitelists/main/whitelist2.json", true))
-end)
 local antivoidpart
 local function requesturl(url, bypass) 
     if betterisfile(url) and shared.FutureDeveloper then 
         return readfile(url)
     end
-    local repourl = bypass and "https://raw.githubusercontent.com/nalityemailperson-create/" or "https://raw.githubusercontent.com/nalityemailperson-create/Future/main/"
-    local url = url:gsub("Future/", "")
-    local req = requestfunc({
-        Url = repourl..url,
-        Method = "GET"
-    })
-    if req.StatusCode == 404 then error("404 Not Found") end
-    return req.Body
+
+    local cleanurl = tostring(url):gsub("^%./+", ""):gsub("^/+", ""):gsub("Future/", "")
+    local repourls = {
+        (bypass and "https://raw.githubusercontent.com/nalityemailperson-create/" or "https://raw.githubusercontent.com/nalityemailperson-create/Future/main/"),
+        (bypass and "https://raw.githubusercontent.com/EngoAlt/" or "https://raw.githubusercontent.com/EngoAlt/Future/main/")
+    }
+
+    for _, repourl in ipairs(repourls) do
+        local ok, req = pcall(function()
+            return requestfunc({
+                Url = repourl .. cleanurl,
+                Method = "GET"
+            })
+        end)
+
+        if ok and req and req.StatusCode == 200 then
+            return req.Body
+        end
+    end
+
+    warn("[Future] Failed to fetch " .. tostring(url) .. " from configured GitHub mirrors.")
+    return nil
 end 
 local shalib = loadstring(requesturl("lib/sha.lua"))()
 local savedc0 = game:GetService("ReplicatedStorage"):WaitForChild("Assets"):WaitForChild("Viewmodel"):WaitForChild("RightHand"):WaitForChild("RightWrist").C0
